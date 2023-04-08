@@ -1,0 +1,42 @@
+properties([
+    parameters([
+        string(defaultValue: 'develop', name: 'branch')
+    ])
+])
+
+node {
+    stage('Prepare VCS') {
+        checkout scm
+        echo params.branch
+        git branch: "${params.branch}", url: '~/Projects/wrapper'
+    }
+
+    stage('Composer') {
+        sh '''
+            /opt/homebrew/bin/php /opt/homebrew/bin/composer about
+            /opt/homebrew/bin/php /opt/homebrew/bin/composer install
+        '''
+    }
+
+    stage('Test') {
+        try {
+            sh '''
+                /opt/homebrew/bin/php /opt/homebrew/bin/composer install
+                /opt/homebrew/bin/php ./vendor/bin/phpunit --log-junit results.xml
+            '''
+        } catch (err) {
+            currentBuild.result = 'FAILURE'
+            echo "Caught: ${err}"
+        } finally {
+            junit '**/results.xml'
+        }
+    }
+
+    stage('Report') {
+        if (currentBuild.result == 'FAILURE') {
+            sh "cdci/notification.fail.applescript $params.branch"
+        } else {
+            sh "cdci/notification.success.applescript $params.branch"
+        }
+    }
+}
