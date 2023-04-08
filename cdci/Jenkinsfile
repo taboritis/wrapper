@@ -13,22 +13,21 @@ node {
 
     stage('Composer') {
         sh '''
-            /opt/homebrew/bin/php /opt/homebrew/bin/composer about
             /opt/homebrew/bin/php /opt/homebrew/bin/composer install
         '''
     }
 
-    stage('Test') {
+    stage('Tests') {
         try {
             sh '''
-                /opt/homebrew/bin/php /opt/homebrew/bin/composer install
-                /opt/homebrew/bin/php ./vendor/bin/phpunit --log-junit results.xml
+                /opt/homebrew/bin/php ./vendor/bin/phpcs --report-full --report-junit=codesniffer-results.xml
+                /opt/homebrew/bin/php ./vendor/bin/phpunit --log-junit phpunit-results.xml
             '''
         } catch (err) {
             currentBuild.result = 'FAILURE'
             echo "Caught: ${err}"
         } finally {
-            junit '**/results.xml'
+            junit '**/*-results.xml'
         }
     }
 

@@ -2,7 +2,7 @@ name: PHP tests
 
 on:
     push:
-        branches: [ "main","develop" ]
+        branches: [ "**" ]
     pull_request:
         branches: [ "**" ]
 
@@ -31,5 +31,8 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
-            - name: Run phpunit tests
+            - name: Run PhpUnit tests
               run: vendor/bin/phpunit
+
+            - name: Run Codesniffer tests
+              run: vendor/bin/phpcs
